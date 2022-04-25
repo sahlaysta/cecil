@@ -15,6 +15,20 @@ namespace Mono.Cecil {
 
 	public sealed class EmbeddedResource : Resource {
 
+
+
+
+
+		//sahlaysta: set tmp stream
+		public static Stream EmbeddedResourceStream { get; set; }
+
+
+
+
+
+
+
+
 		readonly MetadataReader reader;
 
 		uint? offset;
@@ -68,6 +82,8 @@ namespace Mono.Cecil {
 
 			if (offset.HasValue)
 				return reader.GetManagedResource (offset.Value);
+
+			data = null;//sahlaysta: set null for garbage collection
 
 			throw new InvalidOperationException ();
 		}
