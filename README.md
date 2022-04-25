@@ -1,17 +1,54 @@
 Cecil
 =====
 
-Mono.Cecil is a library to generate and inspect programs and libraries in the ECMA CIL form.
+Fork of the Cecil library: https://github.com/jbevain/cecil
 
-To put it simply, you can use Cecil to:
+When modifying an assembly, adding many embedded resources would use an equally large amount of RAM. This fork fixes that by using a temp file for the resource buffer, so disk is used instead of RAM
 
-* Analyze .NET binaries using a simple and powerful object model, without having to load assemblies to use Reflection.
-* Modify .NET binaries, add new metadata structures and alter the IL code.
+NOTE: This fork is not a fix for large embedded resource files, but rather many smaller embedded resource files. For the former purpose, the solution is to split it into multiple embedded resource files a reasonable size, say 16 mb per split
 
-Cecil has been around since 2004 and is [widely used](https://github.com/jbevain/cecil/wiki/Users) in the .NET community. If you're using Cecil, or depend on a framework, project, or product using it, please consider [sponsoring Cecil](https://github.com/sponsors/jbevain/).
+## Usage
 
-Read about the Cecil development on the [development log](http://cecil.pe).
+Beforehand, set the static property: <code>Mono.Cecil.EmbeddedResource.EmbeddedResourceStream</code>
 
-To discuss Cecil, the best place is the [mono-cecil](https://groups.google.com/group/mono-cecil) Google Group.
+```c#
+using Mono.Cecil;
+using System;
+using System.IO;
 
-Cecil is a project under the benevolent umbrella of the [.NET Foundation](http://www.dotnetfoundation.org/).
+namespace Program
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            //set temp file
+            var tempFile = new FileStream(
+                @"C:\temp.tmp",
+                FileMode.Create,
+                FileAccess.ReadWrite); //readwrite required
+            Mono.Cecil.EmbeddedResource.EmbeddedResourceStream = tempFile;
+            
+            
+            using (tempFile)
+            {
+                //read assembly
+                var assembly = AssemblyDefinition.ReadAssembly(
+                    @"C:\assembly.exe");
+
+                //(do stuff)
+
+                //write assembly
+                using (assembly)
+                {
+                    assembly.Write(
+                        @"C:\newassembly.exe");
+                }
+            }
+            
+            //(optional)
+            Mono.Cecil.EmbeddedResource.EmbeddedResourceStream = null;
+        }
+    }
+}
+```
