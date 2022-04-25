@@ -10,6 +10,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 using Mono.Cecil.PE;
@@ -238,12 +239,134 @@ namespace Mono.Cecil.Metadata {
 		}
 	}
 
+
+	//sahlaysta: modified resource buffer
 	sealed class ResourceBuffer : ByteBuffer {
 
 		public ResourceBuffer ()
 			: base (0)
 		{
 		}
+
+		public readonly Stream fs = Mono.Cecil.EmbeddedResource.EmbeddedResourceStream;
+
+
+
+
+
+
+		//sahlaysta: overridden disk methods
+
+		public override void Advance (int length)
+		{
+			fs.Position += length;
+		}
+		public override byte ReadByte ()
+		{
+			return (byte)fs.ReadByte ();
+		}
+		public override byte [] ReadBytes (int length)
+		{
+			byte [] bytes = new byte [length];
+			int pos = 0;
+			while (true) {
+				int read = fs.Read (bytes, pos, bytes.Length - pos);
+				if (read == 0)
+					throw new Exception("Not enough bytes");
+				pos += read;
+				if (pos == bytes.Length)
+					break;
+			}
+			return bytes;
+		}
+		public override ushort ReadUInt16 ()
+		{
+			byte b1 = ReadByte (), b2 = ReadByte ();
+			ushort value = (ushort)(b1
+				| (b2 << 8));
+			return value;
+		}
+		public override uint ReadUInt32 ()
+		{
+			byte b1 = ReadByte (), b2 = ReadByte ();
+			byte b3 = ReadByte (), b4 = ReadByte ();
+			uint value = (uint)(b1
+				| (b2 << 8)
+				| (b3 << 16)
+				| (b4 << 24));
+			return value;
+		}
+		public override int ReadCompressedInt32 ()
+		{
+			var b = ReadByte ();
+			fs.Position--;
+			var u = (int)ReadCompressedUInt32 ();
+			var v = u >> 1;
+			if ((u & 1) == 0)
+				return v;
+
+			switch (b & 0xc0) {
+			case 0:
+			case 0x40:
+				return v - 0x40;
+			case 0x80:
+				return v - 0x2000;
+			default:
+				return v - 0x10000000;
+			}
+		}
+		public override void WriteByte (byte value)
+		{
+			fs.WriteByte (value);
+		}
+		public override void WriteUInt16 (ushort value)
+		{
+			WriteByte ((byte)value);
+			WriteByte ((byte)(value >> 8));
+		}
+		public override void WriteUInt32 (uint value)
+		{
+			WriteByte ((byte)value);
+			WriteByte ((byte)(value >> 8));
+			WriteByte ((byte)(value >> 16));
+			WriteByte ((byte)(value >> 24));
+		}
+		public override void WriteUInt64 (ulong value)
+		{
+			WriteByte ((byte)value);
+			WriteByte ((byte)(value >> 8));
+			WriteByte ((byte)(value >> 16));
+			WriteByte ((byte)(value >> 24));
+			WriteByte ((byte)(value >> 32));
+			WriteByte ((byte)(value >> 40));
+			WriteByte ((byte)(value >> 48));
+			WriteByte ((byte)(value >> 56));
+		}
+		public override void WriteBytes (byte [] bytes)
+		{
+			fs.Write (bytes, 0, bytes.Length);
+		}
+		public override void WriteBytes (int length)
+		{
+			fs.Position += length;
+		}
+		public override void WriteBytes (ByteBuffer buffer)
+		{
+			WriteBytes (buffer.buffer);
+		}
+		public override void Grow (int desired)
+		{
+			
+		}
+
+
+
+
+
+
+
+
+
 
 		public uint AddResource (byte [] resource)
 		{
