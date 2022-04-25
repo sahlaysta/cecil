@@ -453,7 +453,7 @@ namespace Mono.Cecil.PE {
 			// Resources
 
 			MoveToRVA (TextSegment.Resources);
-			WriteBuffer (metadata.resources);
+			WriteBuffer (((ResourceBuffer)metadata.resources).fs);//sahlaysta: use fs stream
 
 			// Data
 
@@ -697,7 +697,7 @@ namespace Mono.Cecil.PE {
 			var map = text_map;
 
 			map.AddMap (TextSegment.Code, metadata.code.length, !pe64 ? 4 : 16);
-			map.AddMap (TextSegment.Resources, metadata.resources.length, 8);
+			map.AddMap (TextSegment.Resources, (int)((ResourceBuffer)metadata.resources).fs.Length, 8);//sahlaysta: use fs stream
 			map.AddMap (TextSegment.Data, metadata.data.length, metadata.data.BufferAlign);
 			if (metadata.data.length > 0)
 				metadata.table_heap.FixupData (map.GetRVA (TextSegment.Data));
