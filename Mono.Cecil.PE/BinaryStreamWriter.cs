@@ -71,6 +71,16 @@ namespace Mono.Cecil.PE {
 			Write (buffer.buffer, 0, buffer.length);
 		}
 
+
+		//sahlaysta: write from fs stream
+		public void WriteBuffer (System.IO.Stream stream)
+		{
+			byte [] buffer = new byte [4096];
+			int read;
+			while ((read = stream.Read (buffer, 0, buffer.Length)) != 0)
+				Write (buffer, 0, read);
+		}
+
 		protected void Advance (int bytes)
 		{
 			BaseStream.Seek (bytes, SeekOrigin.Current);
