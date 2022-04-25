@@ -14,34 +14,47 @@ namespace Mono.Cecil.PE {
 
 	class ByteBuffer {
 
-		internal byte [] buffer;
+		private byte [] buf;
+		internal virtual byte [] buffer {
+			get {
+				return buf;
+			}
+			set {
+				buf = value;
+			}
+		}
 		internal int length;
 		internal int position;
 
 		public ByteBuffer ()
 		{
-			this.buffer = Empty<byte>.Array;
+			this.buf = Empty<byte>.Array;
 		}
 
 		public ByteBuffer (int length)
 		{
-			this.buffer = new byte [length];
+			this.buf = new byte [length];
 		}
 
 		public ByteBuffer (byte [] buffer)
 		{
-			this.buffer = buffer ?? Empty<byte>.Array;
-			this.length = this.buffer.Length;
+			this.buf = buffer ?? Empty<byte>.Array;
+			this.length = this.buf.Length;
 		}
 
-		public void Advance (int length)
+
+
+
+		//sahlaysta: methods made virtual
+
+		public virtual void Advance (int length)
 		{
 			position += length;
 		}
 
-		public byte ReadByte ()
+		public virtual byte ReadByte ()
 		{
-			return buffer [position++];
+			return buf [position++];
 		}
 
 		public sbyte ReadSByte ()
@@ -49,18 +62,18 @@ namespace Mono.Cecil.PE {
 			return (sbyte) ReadByte ();
 		}
 
-		public byte [] ReadBytes (int length)
+		public virtual byte [] ReadBytes (int length)
 		{
 			var bytes = new byte [length];
-			Buffer.BlockCopy (buffer, position, bytes, 0, length);
+			Buffer.BlockCopy (buf, position, bytes, 0, length);
 			position += length;
 			return bytes;
 		}
 
-		public ushort ReadUInt16 ()
+		public virtual ushort ReadUInt16 ()
 		{
-			ushort value = (ushort) (buffer [position]
-				| (buffer [position + 1] << 8));
+			ushort value = (ushort) (buf [position]
+				| (buf [position + 1] << 8));
 			position += 2;
 			return value;
 		}
@@ -70,12 +83,12 @@ namespace Mono.Cecil.PE {
 			return (short) ReadUInt16 ();
 		}
 
-		public uint ReadUInt32 ()
+		public virtual uint ReadUInt32 ()
 		{
-			uint value = (uint) (buffer [position]
-				| (buffer [position + 1] << 8)
-				| (buffer [position + 2] << 16)
-				| (buffer [position + 3] << 24));
+			uint value = (uint) (buf [position]
+				| (buf [position + 1] << 8)
+				| (buf [position + 2] << 16)
+				| (buf [position + 3] << 24));
 			position += 4;
 			return value;
 		}
@@ -114,9 +127,9 @@ namespace Mono.Cecil.PE {
 				| ReadByte ();
 		}
 
-		public int ReadCompressedInt32 ()
+		public virtual int ReadCompressedInt32 ()
 		{
-			var b = buffer [position];
+			var b = buf [position];
 			var u = (int) ReadCompressedUInt32 ();
 			var v = u >> 1;
 			if ((u & 1) == 0)
@@ -134,7 +147,7 @@ namespace Mono.Cecil.PE {
 			}
 		}
 
-		public float ReadSingle ()
+		public virtual float ReadSingle ()
 		{
 			if (!BitConverter.IsLittleEndian) {
 				var bytes = ReadBytes (4);
@@ -142,8 +155,8 @@ namespace Mono.Cecil.PE {
 				return BitConverter.ToSingle (bytes, 0);
 			}
 
-			float value = BitConverter.ToSingle (buffer, position);
-			position += 4;
+			var bytes2 = ReadBytes (4);
+			float value = BitConverter.ToSingle (bytes2, 0);
 			return value;
 		}
 
@@ -155,17 +168,17 @@ namespace Mono.Cecil.PE {
 				return BitConverter.ToDouble (bytes, 0);
 			}
 
-			double value = BitConverter.ToDouble (buffer, position);
-			position += 8;
+			var bytes2 = ReadBytes (8);
+			double value = BitConverter.ToDouble (bytes2, 0);
 			return value;
 		}
 
-		public void WriteByte (byte value)
+		public virtual void WriteByte (byte value)
 		{
-			if (position == buffer.Length)
+			if (position == buf.Length)
 				Grow (1);
 
-			buffer [position++] = value;
+			buf [position++] = value;
 
 			if (position > length)
 				length = position;
@@ -176,13 +189,13 @@ namespace Mono.Cecil.PE {
 			WriteByte ((byte) value);
 		}
 
-		public void WriteUInt16 (ushort value)
+		public virtual void WriteUInt16 (ushort value)
 		{
-			if (position + 2 > buffer.Length)
+			if (position + 2 > buf.Length)
 				Grow (2);
 
-			buffer [position++] = (byte) value;
-			buffer [position++] = (byte) (value >> 8);
+			buf [position++] = (byte) value;
+			buf [position++] = (byte) (value >> 8);
 
 			if (position > length)
 				length = position;
@@ -193,15 +206,15 @@ namespace Mono.Cecil.PE {
 			WriteUInt16 ((ushort) value);
 		}
 
-		public void WriteUInt32 (uint value)
+		public virtual void WriteUInt32 (uint value)
 		{
-			if (position + 4 > buffer.Length)
+			if (position + 4 > buf.Length)
 				Grow (4);
 
-			buffer [position++] = (byte) value;
-			buffer [position++] = (byte) (value >> 8);
-			buffer [position++] = (byte) (value >> 16);
-			buffer [position++] = (byte) (value >> 24);
+			buf [position++] = (byte) value;
+			buf [position++] = (byte) (value >> 8);
+			buf [position++] = (byte) (value >> 16);
+			buf [position++] = (byte) (value >> 24);
 
 			if (position > length)
 				length = position;
@@ -212,19 +225,19 @@ namespace Mono.Cecil.PE {
 			WriteUInt32 ((uint) value);
 		}
 
-		public void WriteUInt64 (ulong value)
+		public virtual void WriteUInt64 (ulong value)
 		{
-			if (position + 8 > buffer.Length)
+			if (position + 8 > buf.Length)
 				Grow (8);
 
-			buffer [position++] = (byte) value;
-			buffer [position++] = (byte) (value >> 8);
-			buffer [position++] = (byte) (value >> 16);
-			buffer [position++] = (byte) (value >> 24);
-			buffer [position++] = (byte) (value >> 32);
-			buffer [position++] = (byte) (value >> 40);
-			buffer [position++] = (byte) (value >> 48);
-			buffer [position++] = (byte) (value >> 56);
+			buf [position++] = (byte) value;
+			buf [position++] = (byte) (value >> 8);
+			buf [position++] = (byte) (value >> 16);
+			buf [position++] = (byte) (value >> 24);
+			buf [position++] = (byte) (value >> 32);
+			buf [position++] = (byte) (value >> 40);
+			buf [position++] = (byte) (value >> 48);
+			buf [position++] = (byte) (value >> 56);
 
 			if (position > length)
 				length = position;
@@ -267,22 +280,22 @@ namespace Mono.Cecil.PE {
 			WriteCompressedUInt32 ((uint) ((value << 1) | 1));
 		}
 
-		public void WriteBytes (byte [] bytes)
+		public virtual void WriteBytes (byte [] bytes)
 		{
 			var length = bytes.Length;
-			if (position + length > buffer.Length)
+			if (position + length > buf.Length)
 				Grow (length);
 
-			Buffer.BlockCopy (bytes, 0, buffer, position, length);
+			Buffer.BlockCopy (bytes, 0, buf, position, length);
 			position += length;
 
 			if (position > this.length)
 				this.length = position;
 		}
 
-		public void WriteBytes (int length)
+		public virtual void WriteBytes (int length)
 		{
-			if (position + length > buffer.Length)
+			if (position + length > buf.Length)
 				Grow (length);
 
 			position += length;
@@ -291,12 +304,12 @@ namespace Mono.Cecil.PE {
 				this.length = position;
 		}
 
-		public void WriteBytes (ByteBuffer buffer)
+		public virtual void WriteBytes (ByteBuffer buffer)
 		{
-			if (position + buffer.length > this.buffer.Length)
+			if (position + buffer.length > this.buf.Length)
 				Grow (buffer.length);
 
-			Buffer.BlockCopy (buffer.buffer, 0, this.buffer, position, buffer.length);
+			Buffer.BlockCopy (buffer.buf, 0, this.buf, position, buffer.length);
 			position += buffer.length;
 
 			if (position > this.length)
@@ -323,14 +336,14 @@ namespace Mono.Cecil.PE {
 			WriteBytes (bytes);
 		}
 
-		void Grow (int desired)
+		public virtual void Grow (int desired)
 		{
-			var current = this.buffer;
+			var current = this.buf;
 			var current_length = current.Length;
 
 			var buffer = new byte [System.Math.Max (current_length + desired, current_length * 2)];
 			Buffer.BlockCopy (current, 0, buffer, 0, current_length);
-			this.buffer = buffer;
+			this.buf = buffer;
 		}
 	}
 }
