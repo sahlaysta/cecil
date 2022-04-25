@@ -9,7 +9,7 @@ NOTE: This fork is not a fix for large embedded resource files, but rather many 
 
 ## Usage
 
-Beforehand, set the static property: <code>Mono.Cecil.EmbeddedResource.EmbeddedResourceStream</code>
+Beforehand, set the static property: <code>Mono.Cecil.EmbeddedResource.EmbeddedResourceStream</code> as shown in this usage example
 
 ```c#
 using Mono.Cecil;
