@@ -23,8 +23,9 @@ namespace Program
         static void Main(string[] args)
         {
             //set temp file
+            const string tempFilePath = @"C:\temp.tmp";
             var tempFile = new FileStream(
-                @"C:\temp.tmp",
+                tempFilePath,
                 FileMode.Create,
                 FileAccess.ReadWrite); //readwrite required
             Mono.Cecil.EmbeddedResource.EmbeddedResourceStream = tempFile;
@@ -45,9 +46,10 @@ namespace Program
                         @"C:\newassembly.exe");
                 }
             }
-            
-            //(optional)
             Mono.Cecil.EmbeddedResource.EmbeddedResourceStream = null;
+            
+            //delete temp file
+            File.Delete(tempFilePath);
         }
     }
 }
