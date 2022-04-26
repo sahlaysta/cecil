@@ -453,7 +453,10 @@ namespace Mono.Cecil.PE {
 			// Resources
 
 			MoveToRVA (TextSegment.Resources);
-			WriteBuffer (((ResourceBuffer)metadata.resources).fs);//sahlaysta: use fs stream
+			//sahlaysta: use fs stream
+			var b = ((ResourceBuffer)metadata.resources).fs;
+			b.Position = 0;
+			WriteBuffer (b);
 
 			// Data
 
