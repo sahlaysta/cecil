@@ -256,10 +256,22 @@ namespace Mono.Cecil.Metadata {
 
 
 		//sahlaysta: overridden disk methods
+		internal override byte[] buffer {
+			get { throw new NotSupportedException (); }
+			set { throw new NotSupportedException (); }
+		}
+		internal override int length {
+			get { throw new NotSupportedException (); }
+			set { throw new NotSupportedException (); }
+		}
+		internal override int position {
+			get { return (int)fs.Position; }
+			set { throw new NotSupportedException (); }
+		}
 
 		public override void Advance (int length)
 		{
-			fs.Position += length;
+
 		}
 		public override byte ReadByte ()
 		{
@@ -356,7 +368,7 @@ namespace Mono.Cecil.Metadata {
 		}
 		public override void Grow (int desired)
 		{
-			
+
 		}
 
 
