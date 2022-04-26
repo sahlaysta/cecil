@@ -23,8 +23,8 @@ namespace Mono.Cecil.PE {
 				buf = value;
 			}
 		}
-		internal int length;
-		internal int position;
+		internal virtual int length { get; set; }
+		internal virtual int position { get; set; }
 
 		public ByteBuffer ()
 		{
