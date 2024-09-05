@@ -22,34 +22,29 @@ namespace Program
     {
         static void Main(string[] args)
         {
-            //set temp file
+            //create and set temp file
             const string tempFilePath = @"C:\temp.tmp";
             var tempFile = new FileStream(
                 tempFilePath,
                 FileMode.Create,
                 FileAccess.ReadWrite); //readwrite required
             Mono.Cecil.EmbeddedResource.EmbeddedResourceStream = tempFile;
-            
-            
-            using (tempFile)
+            try
             {
-                //read assembly
-                var assembly = AssemblyDefinition.ReadAssembly(
-                    @"C:\assembly.exe");
-
-                //(do stuff)
-
-                //write assembly
-                using (assembly)
+                using (tempFile)
+                using (var assembly = AssemblyDefinition.ReadAssembly(@"C:\assembly.exe"))
                 {
-                    assembly.Write(
-                        @"C:\newassembly.exe");
+                    //(do stuff)
+                    
+                    //write assembly
+                    assembly.Write(@"C:\newassembly.exe");
                 }
             }
-            Mono.Cecil.EmbeddedResource.EmbeddedResourceStream = null;
-            
-            //delete temp file
-            File.Delete(tempFilePath);
+            finally
+            {
+                Mono.Cecil.EmbeddedResource.EmbeddedResourceStream = null;
+                File.Delete(tempFilePath);
+            }
         }
     }
 }
